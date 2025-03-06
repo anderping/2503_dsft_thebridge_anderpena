@@ -110,9 +110,9 @@ while game_on:
                 print("Tocado. Buen disparo!\n")
 
             print("Indica las coordenadas de disparo: ")
-            coordinates = input()
+            atack_coordinates = input()
 
-            hit = UserBoard.fire(coordinates)
+            hit = UserBoard.fire(atack_coordinates)
 
             first_shoot = False
             

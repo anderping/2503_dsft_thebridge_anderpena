@@ -1,6 +1,7 @@
 import numpy as np
 from ships import Ships
 import random
+from main import PCBoard
 
 
 class Board():
@@ -203,7 +204,21 @@ class Board():
                 self.player_board[coordinate_list[0] + x, coordinate_list[1]] = "▣"
 
 
-    def fire(coordinates=""):
+    def fire(self, atack_coordinates=""):
+        if self.player == "user":
+            self.player_board = PC_board
+
+            attack_coordinate_letter = ''.join(filter(str.isalpha, atack_coordinates))
+            attack_coordinate_num = int(''.join(filter(str.isdigit, atack_coordinates)))
+
+            attack_letters_pos = np.where(self.player_board == attack_coordinate_letter)[1][0]
+
+            attack_coordinate_list = [attack_coordinate_num, attack_letters_pos]
         
-        
+            if self.PCBoard.[attack_coordinate_list[0], attack_coordinate_list[1]] == "▣":
+                
+
+                hit = True
+
+
         return hit
