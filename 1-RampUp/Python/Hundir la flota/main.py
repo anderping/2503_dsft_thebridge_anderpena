@@ -2,6 +2,32 @@ from board import Board
 import time
 import os
 from playsound import playsound
+import cv2
+from ffpyplayer.player import MediaPlayer
+
+
+def reproduce_video(video_path, sound_path):
+    cap = cv2.VideoCapture(video_path)
+    player = MediaPlayer(video_path)
+
+    while(cap.isOpened()):
+        ret,frame = cap.read()
+        audio_frame, val = player.get_frame()
+
+        frame = cv2.resize(frame, (1200,700))
+
+        cv2.imshow("video", frame)
+
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
+
+        if val != 'eof' and audio_frame is not None:
+        #audio
+            img, t = audio_frame
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 
 clear = lambda: os.system('cls')
@@ -16,6 +42,15 @@ title = r"""
 | )   ( || (___) || )  \  || (__/  )___) (___| ) \ \__  | (____/\| )   ( |  | )      | (____/\| (___) |   | |   | )   ( |
 |/     \|(_______)|/    )_)(______/ \_______/|/   \__/  (_______/|/     \|  |/       (_______/(_______)   )_(   |/     \|
                                                                                                                          
+                                                    |    |    |                 
+                                                    )_)  )_)  )_)              
+                                                    )___))___))___)\            
+                                                )____)____)_____)\\
+                                                _____|____|____|____\\\__
+                                        ---------\                   /---------
+                                        ^^^^^ ^^^^^^^^^^^^^^^^^^^^^
+                                            ^^^^      ^^^^     ^^^    ^^
+                                                ^^^^      ^^^
 """
 
 enhorabuena = r"""
@@ -156,7 +191,7 @@ while game_on:
 
                         print("\nHas vencido a tu oponente\n")
                         print(enhorabuena)
-                        playsound("/sounds/win.mp3")
+                        playsound("C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/sounds/win.mp3")
 
                         break
 
@@ -166,6 +201,9 @@ while game_on:
                     print("\nTocado. Buen disparo!")
 
             atack_coordinates = input("\nIndica las coordenadas de disparo: ")
+            
+            reproduce_video("canon.mp4", "canon.mp3")
+            # playsound("C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/sounds/canon.mp3")
 
             hit, destrucction = UserBoard.fire(PCBoard.player_board, atack_coordinates)
 
