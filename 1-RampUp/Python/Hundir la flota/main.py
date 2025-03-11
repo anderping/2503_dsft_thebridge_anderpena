@@ -1,38 +1,23 @@
-from board import Board
+from board import Board, LETTER_COOR, NUM_COOR, INITIAL_BOARD
 import time
 import os
 from playsound import playsound
-import cv2
-from ffpyplayer.player import MediaPlayer
+import numpy as np
+import vlc
+import random
 
 
-def reproduce_video(video_path, sound_path):
-    cap = cv2.VideoCapture(video_path)
-    player = MediaPlayer(video_path)
+ORIENTATION_LIST = ["N", "S", "E", "W"]
+SHIP_LIST = ["four_ship", "three_ship", "two_ship", "one_ship"]
 
-    while(cap.isOpened()):
-        ret,frame = cap.read()
-        audio_frame, val = player.get_frame()
+SHOW_PC_SHIPS = True
 
-        frame = cv2.resize(frame, (1200,700))
+VLC_COMMAND = [r"C:/Program Files/VideoLAN/VLC/vlc.exe",
+               "--play-and-exit",
+                r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4"
+                ]
 
-        cv2.imshow("video", frame)
-
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-
-        if val != 'eof' and audio_frame is not None:
-        #audio
-            img, t = audio_frame
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-
-
-clear = lambda: os.system('cls')
-
-title = r"""
+TITLE = r"""
                    _        ______  _________ _______    _        _______    _______  _        _______ _________ _______ 
 |\     /||\     /|( (    /|(  __  \ \__   __/(  ____ )  ( \      (  ___  )  (  ____ \( \      (  ___  )\__   __/(  ___  )
 | )   ( || )   ( ||  \  ( || (  \  )   ) (   | (    )|  | (      | (   ) |  | (    \/| (      | (   ) |   ) (   | (   ) |
@@ -51,18 +36,224 @@ title = r"""
                                         ^^^^^ ^^^^^^^^^^^^^^^^^^^^^
                                             ^^^^      ^^^^     ^^^    ^^
                                                 ^^^^      ^^^
+
 """
 
-enhorabuena = r"""
+ENHORABUENA = r"""
    __    __        ___  __    _      ___         __    __  _   
   /__\/\ \ \/\  /\/___\/__\  /_\    / __\/\ /\  /__\/\ \ \/_\  
  /_\ /  \/ / /_/ //  // \// //_\\  /__\// / \ \/_\ /  \/ //_\\ 
 //__/ /\  / __  / \_// _  \/  _  \/ \/  \ \_/ //__/ /\  /  _  \
 \__/\_\ \/\/ /_/\___/\/ \_/\_/ \_/\_____/\___/\__/\_\ \/\_/ \_/
-                                                               
+                                                            
 """
 
-print(title)
+COBARDE = r"""
+ ________  ________  ________  ________  ________  ________  _______      
+|\   ____\|\   __  \|\   __  \|\   __  \|\   __  \|\   ___ \|\  ___ \     
+\ \  \___|\ \  \|\  \ \  \|\ /\ \  \|\  \ \  \|\  \ \  \_|\ \ \   __/|    
+ \ \  \    \ \  \\\  \ \   __  \ \   __  \ \   _  _\ \  \ \\ \ \  \_|/__  
+  \ \  \____\ \  \\\  \ \  \|\  \ \  \ \  \ \  \\  \\ \  \_\\ \ \  \_|\ \ 
+   \ \_______\ \_______\ \_______\ \__\ \__\ \__\\ _\\ \_______\ \_______\
+    \|_______|\|_______|\|_______|\|__|\|__|\|__|\|__|\|_______|\|_______|
+
+"""
+
+
+def print_boards():   
+    """Function to print the boards."""
+
+    print("\n\t\t  USER BOARD\n")
+
+    for x in UserBoard.player_board:
+        print(f"{x}")
+
+    print("\n")
+    print("\t\t  PC BOARD\n")
+    
+    # Ocultar o no los barcos del PC
+    if SHOW_PC_SHIPS:
+        for x in PCBoard.player_board:
+            print(f"{x}")
+
+    else:
+        for x in INITIAL_BOARD:
+            print(f"{x}")
+
+
+def place_user_ships(ship):
+    """Function to place the user ships on his board."""
+
+    correct_coor = False
+    correct_orient = False
+    
+    while not correct_coor:
+        coordinates = input("Coordenadas: ")
+
+        coordinate_letter = ''.join(filter(str.isalpha, coordinates))
+
+        try:
+            coordinate_num = int(''.join(filter(str.isdigit, coordinates)))
+
+        except ValueError:
+            coordinate_num = None
+
+        if coordinate_letter not in LETTER_COOR or str(coordinate_num) not in NUM_COOR:
+            print("\nIncorrect coordinates, please, try again.")
+
+            continue
+
+        letters_pos = np.where(UserBoard.player_board == coordinate_letter)[1][0].item()
+
+        coordinate_list = [coordinate_num, letters_pos]
+
+        correct_coor = True
+
+    if not ship == "one_ship":
+        while not correct_orient:
+            orientation = input("Orientación: ").upper()
+
+            if orientation not in ORIENTATION_LIST:
+                print("\nIncorrect orientation, please, try again.")
+
+                continue
+
+            correct_orient = True
+    
+    else:
+        orientation = ""
+
+    UserBoard.place_ships(ship, coordinate_list, orientation)
+                    
+    clear()
+
+    print(TITLE)
+    print("\n\t\t  USER BOARD\n")
+    print(f"{UserBoard.player_board}\n")
+
+
+def user_fire(game_on):
+    """Function to process the coordinates of the user atacks."""
+    global pc_ships_destroyed, INITIAL_BOARD
+
+    hit = True
+    first_shoot = True
+    
+    while hit:
+        if not first_shoot:
+            if destrucction:
+                pc_ships_destroyed += 1
+
+                if pc_ships_destroyed == 4:
+                    game_on = False
+
+                    print("\nHas vencido a tu oponente\n")
+                    print(ENHORABUENA)
+                    playsound("C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/sounds/win.mp3")
+
+                    break
+
+                print("\nHundido. Sigue así camarada!")
+
+            else:    
+                print("\nTocado. Buen disparo!")
+
+        correct_coor = False
+
+        while not correct_coor:
+            atack_coordinates = input("\nIndica las coordenadas de disparo: ")
+
+            if atack_coordinates == "Salir":
+                game_on = False
+                hit = False
+            
+                clear()
+
+                print("\nGAME OVER.\nTe has rendido al poder superior de tu oponente.\n")
+                print(COBARDE)
+
+                break
+
+            atack_coordinate_letter = ''.join(filter(str.isalpha, atack_coordinates))
+
+            try:
+                atack_coordinate_num = int(''.join(filter(str.isdigit, atack_coordinates)))
+
+            except ValueError:
+                atack_coordinate_num = None
+
+            if atack_coordinate_letter not in LETTER_COOR or str(atack_coordinate_num) not in NUM_COOR:
+                print("\nCoordenadas incorrectas, por favor, vuelve a introducirlas.")
+
+                continue
+
+            atack_letters_pos = np.where(UserBoard.player_board == atack_coordinate_letter)[1][0].item()
+
+            atack_coordinate_list = [atack_coordinate_num, atack_letters_pos]
+
+            correct_coor = True
+        
+        if atack_coordinates != "Salir":
+            # Reproduce_video
+            player.play()
+            time.sleep(3)
+
+            hit, destrucction = UserBoard.fire(PCBoard.player_board if SHOW_PC_SHIPS else INITIAL_BOARD, atack_coordinate_list)
+
+            first_shoot = False
+            
+            clear()
+
+            print(TITLE)
+
+            print_boards()
+
+    return game_on
+
+
+def pc_fire(game_on):
+    """Function to process the coordinates of the PC atacks."""
+
+    global user_ships_destroyed
+
+    hit = True
+    first_shoot = True
+    
+    while hit:
+        if not first_shoot:
+            if destrucction:
+                user_ships_destroyed += 1
+
+                if user_ships_destroyed == 4:
+                    game_on = False
+
+                    print("\nGAME OVER\nTu oponente ha vencido\n")
+
+                    break
+
+                print("\nHundido")
+
+            else:    
+                print("\nTocado")
+
+        hit, destrucction  = PCBoard.fire(UserBoard.player_board)
+
+        first_shoot = False
+
+        clear()
+        
+        print(TITLE)
+
+        print_boards()
+
+    return game_on
+
+
+clear = lambda: os.system('cls')
+
+clear()
+
+print(TITLE)
 
 open("ship_coordinates.txt", mode="w")
 
@@ -70,196 +261,102 @@ UserBoard = Board("user")
 PCBoard = Board("PC")
 
 game_on = True
-inicio = True
-
-ship_list = ["four_ship", "three_ship", "two_ship", "one_ship"]
+beggining = True
 
 pc_ships_destroyed = 0
 user_ships_destroyed = 0
 
-while game_on:
-    if inicio:
-        print("\n\t\t  USER BOARD\n")
-        print(f"{UserBoard.player_board}\n")
+Instance = vlc.Instance("--fullscreen")
+media = Instance.media_new(r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4")
+player = Instance.media_player_new()
+player.set_media(media)
+media.get_mrl()
 
-        print("\t\t  PC BOARD\n")
-        print(PCBoard.player_board)
+splash = ["splash1", "splash2"]
+
+
+while game_on:
+    if beggining:
+        print_boards()
         
         print("\nColoca tus barcos. Para ello indica las coordenadas del bloque inferior del barco como LETRA + NUMERO y la orientación en la que se ha de colocar (N, W, S, E)."
             "Recuerda dejar siempre agua entre los barcos.\n")
-
-        player = "user"
-
-        for x in ship_list:
+        
+        # Colocar los barcos del usuario:
+        for x in SHIP_LIST:
             match x:
                 case "four_ship":
-                    print("PORTAAVIONES DE LONGITUD 4\n")
-                    coordinates = input("Coordenadas: ")
-                    orientation = input("Orientación: ")
+                    print("1 PORTAAVIONES DE LONGITUD 4\n")
 
-                    UserBoard.place_ships(ship_list[0], coordinates, orientation)
-                    
-                    clear()
+                    place_user_ships(SHIP_LIST[0])
 
-                    print(title)
-                    print("\n\t\t  USER BOARD\n")
-                    print(f"{UserBoard.player_board}\n")
+                # case "three_ship":
+                #     for x in range(2):
+                #         print("2 ACORAZADOS DE LONGITUD 3\n")
+                        
+                #         place_user_ships(SHIP_LIST[1])
 
+                # case "two_ship":
+                #     for x in range(3):
+                #         print("3 DESTRUCTORES DE LONGITUD 2\n")
+                        
+                #         place_user_ships(SHIP_LIST[2])
 
-                case "three_ship":
-                    print("ACORAZADO DE LONGITUD 3\n")
-                    coordinates = input("Coordenadas: ")
-                    orientation = input("Orientación: ")
+                # case "one_ship":
+                #     for x in range(4):
+                #         print("4 FRAGATAS DE LONGITUD 1\n")
 
-                    UserBoard.place_ships(ship_list[1], coordinates, orientation)
-                    
-                    clear()
-                    
-                    print(title)
-                    print("\n\t\t  USER BOARD\n")
-                    print(f"{UserBoard.player_board}\n")
-
-                case "two_ship":
-                    print("DESTRUCTOR DE LONGITUD 2\n")
-                    coordinates = input("Coordenadas: ")
-                    orientation = input("Orientación: ")
-
-                    UserBoard.place_ships(ship_list[2], coordinates, orientation)
-                    
-                    clear()
-
-                    print(title)
-                    print("\n\t\t  USER BOARD\n")
-                    print(f"{UserBoard.player_board}\n")
-
-                case "one_ship":
-                    print("FRAGATA DE LONGITUD 1\n")
-                    coordinates = input("Coordenadas: ")
-                    orientation = input("Orientación: ")
-
-                    UserBoard.place_ships(ship_list[3], coordinates, orientation)
-                    
-                    clear()
-
-                    print(title)
-                    print("\n\t\t  USER BOARD\n")
-                    print(f"{UserBoard.player_board}\n")
+                #         place_user_ships(SHIP_LIST[3])
 
         print("Tu contrincante está colocando sus barcos...")
 
-        player = "PC"
-
-        for x in ship_list:
+        for x in SHIP_LIST:
             match x:
                 case "four_ship":
-                    PCBoard.place_ships(ship_list[0])
+                    PCBoard.place_ships(x)
+
                 case "three_ship":
-                    PCBoard.place_ships(ship_list[1])
+                    for y in range(2):
+                        PCBoard.place_ships(x)
+
                 case "two_ship":
-                    PCBoard.place_ships(ship_list[2])
+                    for y in range(3):
+                        PCBoard.place_ships(x)
+
                 case "one_ship":
-                    PCBoard.place_ships(ship_list[3])
+                    for y in range(4):
+                        PCBoard.place_ships(x)
 
         time.sleep(2)
 
-        inicio = False
+        beggining = False
 
         clear()
 
         print("\nCOMIENZA LA PARTIDA")
 
     else:
-        print(title)
+        print(TITLE)
 
-        print("\n\t\t  USER BOARD\n")
-        print(f"{UserBoard.player_board}\n")
+        print_boards()
 
-        print("\t\t  PC BOARD\n")
-        print(PCBoard.player_board)
-        
-        hit = True
-        first_shoot = True
+        print("\nEscribe \"Salir\" para rendirte.")
 
-
-        while hit:
-            if not first_shoot:
-                if destrucction:
-                    pc_ships_destroyed += 1
-
-                    if pc_ships_destroyed == 4:
-                        game_on = False
-
-                        print("\nHas vencido a tu oponente\n")
-                        print(enhorabuena)
-                        playsound("C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/sounds/win.mp3")
-
-                        break
-
-                    print("\nHundido. Sigue así camarada!")
-
-                else:    
-                    print("\nTocado. Buen disparo!")
-
-            atack_coordinates = input("\nIndica las coordenadas de disparo: ")
-            
-            reproduce_video("canon.mp4", "canon.mp3")
-            # playsound("C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/sounds/canon.mp3")
-
-            hit, destrucction = UserBoard.fire(PCBoard.player_board, atack_coordinates)
-
-            first_shoot = False
-            
-            clear()
-
-            print(title)
-
-            print("\n\t\t  USER BOARD\n")    
-            print(f"{UserBoard.player_board}\n")
-
-            print("\t\t  PC BOARD\n")
-            print(PCBoard.player_board)
+        game_on = user_fire(game_on)
 
         if not game_on:
             break
 
         print("\nAgua. Es el turno de tu oponente.")
 
+        # Reproduce splash sound
+        playsound(f"./sounds/{random.choice(splash)}.mp3")
+        
         print("\nOponente abriendo fuego...")
+
         time.sleep(2)
 
-        hit = True
-        first_shoot = True
-
-        while hit:
-            if not first_shoot:
-                if destrucction:
-                    user_ships_destroyed += 1
-
-                    if user_ships_destroyed == 4:
-                        game_on = False
-
-                        print("\nGAME OVER\nTu oponente ha vencido\n")
-
-                        break
-
-                    print("\nHundido")
-
-                else:    
-                    print("\nTocado")
-
-            hit, destrucction  = PCBoard.fire(UserBoard.player_board)
-
-            first_shoot = False
-
-            clear()
-            
-            print(title)
-
-            print("\n\t\t  USER BOARD\n")    
-            print(f"{UserBoard.player_board}\n")
-
-            print("\t\t  PC BOARD\n")
-            print(PCBoard.player_board)
+        game_on = pc_fire(game_on)
 
         if not game_on:
             break
