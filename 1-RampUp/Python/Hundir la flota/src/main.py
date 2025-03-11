@@ -17,6 +17,8 @@ VLC_COMMAND = [r"C:/Program Files/VideoLAN/VLC/vlc.exe",
                 r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4"
                 ]
 
+SPLASH = ["splash1", "splash2"]
+
 TITLE = r"""
                    _        ______  _________ _______    _        _______    _______  _        _______ _________ _______ 
 |\     /||\     /|( (    /|(  __  \ \__   __/(  ____ )  ( \      (  ___  )  (  ____ \( \      (  ___  )\__   __/(  ___  )
@@ -61,7 +63,7 @@ COBARDE = r"""
 
 
 def print_boards():   
-    """Function to print the boards."""
+    """Print the boards."""
 
     print("\n\t\t  USER BOARD\n")
 
@@ -82,7 +84,7 @@ def print_boards():
 
 
 def place_user_ships(ship):
-    """Function to place the user ships on his board."""
+    """Place the user ships on his board."""
 
     correct_coor = False
     correct_orient = False
@@ -133,7 +135,7 @@ def place_user_ships(ship):
 
 
 def user_fire(game_on):
-    """Function to process the coordinates of the user atacks."""
+    """Process the coordinates of the user atacks."""
     global pc_ships_destroyed, INITIAL_BOARD
 
     hit = True
@@ -212,7 +214,7 @@ def user_fire(game_on):
 
 
 def pc_fire(game_on):
-    """Function to process the coordinates of the PC atacks."""
+    """Process the coordinates of the PC atacks."""
 
     global user_ships_destroyed
 
@@ -257,23 +259,23 @@ print(TITLE)
 
 open("ship_coordinates.txt", mode="w")
 
+# Crear objetos tablero:
 UserBoard = Board("user")
 PCBoard = Board("PC")
 
+# Inicializar variables de control de bucles:
 game_on = True
 beggining = True
 
 pc_ships_destroyed = 0
 user_ships_destroyed = 0
 
+# Definir objeto vídeo:
 Instance = vlc.Instance("--fullscreen")
 media = Instance.media_new(r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4")
 player = Instance.media_player_new()
 player.set_media(media)
 media.get_mrl()
-
-splash = ["splash1", "splash2"]
-
 
 while game_on:
     if beggining:
@@ -350,7 +352,7 @@ while game_on:
         print("\nAgua. Es el turno de tu oponente.")
 
         # Reproduce splash sound
-        playsound(f"./sounds/{random.choice(splash)}.mp3")
+        playsound(f"./sounds/{random.choice(SPLASH)}.mp3")
         
         print("\nOponente abriendo fuego...")
 
