@@ -40,10 +40,21 @@ def get_random_coordinate(ship_type, direction):
         return [random.randint(1, 10), random.randint(ship_ranges[ship_type][0], ship_ranges[ship_type][1])]
 
 
-def delimit_prohibited_coor(possible_coor, initial_prohibited_coor):
+def delimit_prohibited_coor(possible_coor):
     """Adjust prohibited coordinates based on board boundaries."""
     
-    delimited_prohibited_coor = initial_prohibited_coor.copy()
+    prohibited_coor = [
+        [possible_coor[0], possible_coor[1] - 1],
+        [possible_coor[0] - 1, possible_coor[1] - 1],
+        [possible_coor[0] - 1, possible_coor[1]],
+        [possible_coor[0] - 1, possible_coor[1] + 1],
+        [possible_coor[0], possible_coor[1] + 1],
+        [possible_coor[0] + 1, possible_coor[1] + 1],
+        [possible_coor[0] + 1, possible_coor[1]],
+        [possible_coor[0] + 1, possible_coor[1] - 1]
+        ]
+    
+    delimited_prohibited_coor = prohibited_coor.copy()
 
     if possible_coor[0] == 1:
         del delimited_prohibited_coor[1:4]
@@ -60,7 +71,7 @@ def delimit_prohibited_coor(possible_coor, initial_prohibited_coor):
     return delimited_prohibited_coor
 
 
-def is_valid_position(coordinate_list, player_board, prohibited_coor, ship_type, direction, segment=0):
+def is_valid_position(coordinate_list, player_board, ship_type, direction, segment=0):
     """Recursively check if the ship can be placed in the given position."""
 
     if segment == SHIP_SIZES[ship_type]:
@@ -68,12 +79,15 @@ def is_valid_position(coordinate_list, player_board, prohibited_coor, ship_type,
     
     x, y = coordinate_list
     new_pos = [x + segment, y] if direction == "Vertical" else [x, y + segment]
+
+    with open("ship_coordinates.txt", "r") as f:
+        coor_dict = ast.literal_eval(f.read())
+
+    for saved_coordinates in coor_dict["PC"].values():
+        if tuple(new_pos) in saved_coordinates:
+            return False
     
-    # Dejo sin implementar la funcionalidad para que los barcos se coloquen con agua alrededor siempre
-    if player_board[new_pos[0], new_pos[1]] == "▣": # or tuple(new_pos) in prohibited_coor:
-        return False
-    
-    return is_valid_position(coordinate_list, player_board, prohibited_coor, ship_type, direction, segment + 1)
+    return is_valid_position(coordinate_list, player_board, ship_type, direction, segment + 1)
 
 
 def get_pc_ship_coor(ship_type, direction, player_board):
@@ -82,65 +96,52 @@ def get_pc_ship_coor(ship_type, direction, player_board):
     while True:
         coordinate_list = get_random_coordinate(ship_type, direction)
         
-        prohibited_coor = [
-            (coordinate_list[0], coordinate_list[1] - 1),
-            (coordinate_list[0] - 1, coordinate_list[1] - 1),
-            (coordinate_list[0] - 1, coordinate_list[1]),
-            (coordinate_list[0] - 1, coordinate_list[1] + 1),
-            (coordinate_list[0], coordinate_list[1] + 1),
-            (coordinate_list[0] + 1, coordinate_list[1] + 1),
-            (coordinate_list[0] + 1, coordinate_list[1]),
-            (coordinate_list[0] + 1, coordinate_list[1] - 1)
-        ]
-        
-        delimited_prohibited_coor = delimit_prohibited_coor(coordinate_list, prohibited_coor)
-        
-        if is_valid_position(coordinate_list, player_board, delimited_prohibited_coor, ship_type, direction):
-            break
+        if ship_type != "four_ship":
+            if is_valid_position(coordinate_list, player_board, ship_type, direction):
+                break
+
+        else: break
 
     return coordinate_list
 
 
-def add_to_dict(data, player, ship, coor):
+def add_to_dict(player, ship, coor):
     """Add a new ship to the "ship_coordinates.txt" document."""
+    global coord_dic
 
-    if player not in data:
-        data[player] = {}
-    if ship not in data[player]:
-        data[player][ship] = []
+    if player not in coord_dic:
+        coord_dic[player] = {}
 
-    data[player][ship].append(coor)
+    if ship not in coord_dic[player]:
+        coord_dic[player][ship] = []
+
+    coord_dic[player][ship].append(coor)
 
     with open("ship_coordinates.txt", "w") as f:
-        f.write(str(dict(data)))
+        f.write(str(dict(coord_dic)))
 
 
 def copy_ships_on_board(orientation, player_board, ship_len, coordinate_list, player, ship_type):
     """Copy the ships on the player board."""
     
-    if orientation == 'E' or orientation == "":
-        for x in range(ship_len):
-            player_board[coordinate_list[0], coordinate_list[1] + x] = "▣"
+    direction_map = {
+        'E': [0, 1],
+        'N': [-1, 0],
+        'W': [0, -1],
+        'S': [1, 0],
+    }
 
-            add_to_dict(coord_dic, player, ship_type, [coordinate_list[0], coordinate_list[1] + x])
+    dx, dy = direction_map.get(orientation, [0, 1])  # Obtener desplazamiento
 
-    elif orientation == 'N':
-        for x in range(ship_len):
-            player_board[coordinate_list[0] - x, coordinate_list[1]] = "▣"
+    for x in range(ship_len):
+        new_pos = [coordinate_list[0] + x * dx, coordinate_list[1] + x * dy]
 
-            add_to_dict(coord_dic, player, ship_type, [coordinate_list[0] - x, coordinate_list[1]])
-                    
-    elif orientation == 'W':
-        for x in range(ship_len):
-            player_board[coordinate_list[0], coordinate_list[1] - x] = "▣"
+        player_board[new_pos[0], new_pos[1]] = "▣"  # Marcar en el tablero
 
-            add_to_dict(coord_dic, player, ship_type, [coordinate_list[0], coordinate_list[1] - x])
+        add_to_dict(player, ship_type, new_pos)  # Guardar coordenada
 
-    elif orientation == 'S':
-        for x in range(ship_len):
-            player_board[coordinate_list[0] + x, coordinate_list[1]] = "▣"
-
-            add_to_dict(coord_dic, player, ship_type, [coordinate_list[0] + x, coordinate_list[1]])
+        if player == "PC":  # Si es la PC, agregar coordenadas prohibidas
+            add_to_dict(player, f"{ship_type}_prohibited", delimit_prohibited_coor(new_pos))
 
 
 def check_ship_hit(player, coor):
@@ -195,8 +196,6 @@ class Board():
             self.opponent = "user"
 
     def place_ships(self, ship_type, coordinate_list=[], orientation=""):
-        global coord_dic
-
         # PARAMETROS POSICION BARCOS PC:
         if self.player == "PC":
             direction = random.choice(["Vertical", "Horizontal"])
@@ -222,8 +221,6 @@ class Board():
 
 
     def fire(self, opponent_board, atack_coordinate_list=[]):
-        global coord_dic
-
         if self.player == "PC":
             atack_coordinate_list = [random.randint(1, 10), random.randint(1, 10)]
 
@@ -232,7 +229,7 @@ class Board():
 
             ship_type = check_ship_hit(self.opponent, atack_coordinate_list)
             
-            add_to_dict(coord_dic, f"{self.player}_hits", ship_type, [atack_coordinate_list[0], atack_coordinate_list[1]])
+            add_to_dict(f"{self.player}_hits", ship_type, [atack_coordinate_list[0], atack_coordinate_list[1]])
 
             destruction = check_ship_destroyed(f"{self.player}_hits", ship_type)
 

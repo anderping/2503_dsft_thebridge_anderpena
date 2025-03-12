@@ -67,7 +67,7 @@ def print_boards():
 
     print("\n\t\t  USER BOARD\n")
 
-    for x in UserBoard.player_board:
+    for x in userBoard.player_board:
         print(f"{x}")
 
     print("\n")
@@ -75,7 +75,7 @@ def print_boards():
     
     # Ocultar o no los barcos del PC
     if SHOW_PC_SHIPS:
-        for x in PCBoard.player_board:
+        for x in pcBoard.player_board:
             print(f"{x}")
 
     else:
@@ -105,7 +105,7 @@ def place_user_ships(ship):
 
             continue
 
-        letters_pos = np.where(UserBoard.player_board == coordinate_letter)[1][0].item()
+        letters_pos = np.where(userBoard.player_board == coordinate_letter)[1][0].item()
 
         coordinate_list = [coordinate_num, letters_pos]
 
@@ -125,13 +125,13 @@ def place_user_ships(ship):
     else:
         orientation = ""
 
-    UserBoard.place_ships(ship, coordinate_list, orientation)
+    userBoard.place_ships(ship, coordinate_list, orientation)
                     
     clear()
 
     print(TITLE)
     print("\n\t\t  USER BOARD\n")
-    print(f"{UserBoard.player_board}\n")
+    print(f"{userBoard.player_board}\n")
 
 
 def user_fire(game_on):
@@ -189,7 +189,7 @@ def user_fire(game_on):
 
                 continue
 
-            atack_letters_pos = np.where(UserBoard.player_board == atack_coordinate_letter)[1][0].item()
+            atack_letters_pos = np.where(userBoard.player_board == atack_coordinate_letter)[1][0].item()
 
             atack_coordinate_list = [atack_coordinate_num, atack_letters_pos]
 
@@ -200,7 +200,7 @@ def user_fire(game_on):
             player.play()
             time.sleep(3)
 
-            hit, destrucction = UserBoard.fire(PCBoard.player_board if SHOW_PC_SHIPS else INITIAL_BOARD, atack_coordinate_list)
+            hit, destrucction = userBoard.fire(pcBoard.player_board if SHOW_PC_SHIPS else INITIAL_BOARD, atack_coordinate_list)
 
             first_shoot = False
             
@@ -238,7 +238,7 @@ def pc_fire(game_on):
             else:    
                 print("\nTocado")
 
-        hit, destrucction  = PCBoard.fire(UserBoard.player_board)
+        hit, destrucction  = pcBoard.fire(userBoard.player_board)
 
         first_shoot = False
 
@@ -253,6 +253,8 @@ def pc_fire(game_on):
 
 clear = lambda: os.system('cls')
 
+os.chdir(os.path.dirname(os.path.abspath(__file__))) 
+
 clear()
 
 print(TITLE)
@@ -260,8 +262,8 @@ print(TITLE)
 open("ship_coordinates.txt", mode="w")
 
 # Crear objetos tablero:
-UserBoard = Board("user")
-PCBoard = Board("PC")
+userBoard = Board("user")
+pcBoard = Board("PC")
 
 # Inicializar variables de control de bucles:
 game_on = True
@@ -271,9 +273,9 @@ pc_ships_destroyed = 0
 user_ships_destroyed = 0
 
 # Definir objeto vídeo:
-Instance = vlc.Instance("--fullscreen")
-media = Instance.media_new(r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4")
-player = Instance.media_player_new()
+instance = vlc.Instance("--fullscreen")
+media = instance.media_new(r"C:/Users/defco/OneDrive/Escritorio/Cursos/Programación/Cursados/Data Science Bootcamp/2503_dsft_thebridge_anderpena/1-RampUp/Python/Hundir la flota/videos/canon.mp4")
+player = instance.media_player_new()
 player.set_media(media)
 media.get_mrl()
 
@@ -315,19 +317,19 @@ while game_on:
         for x in SHIP_LIST:
             match x:
                 case "four_ship":
-                    PCBoard.place_ships(x)
+                    pcBoard.place_ships(x)
 
                 case "three_ship":
                     for y in range(2):
-                        PCBoard.place_ships(x)
+                        pcBoard.place_ships(x)
 
                 case "two_ship":
                     for y in range(3):
-                        PCBoard.place_ships(x)
+                        pcBoard.place_ships(x)
 
                 case "one_ship":
                     for y in range(4):
-                        PCBoard.place_ships(x)
+                        pcBoard.place_ships(x)
 
         time.sleep(2)
 
